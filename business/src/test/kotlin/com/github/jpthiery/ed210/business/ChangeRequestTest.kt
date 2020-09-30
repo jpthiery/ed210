@@ -3,6 +3,7 @@ package com.github.jpthiery.ed210.business
 import com.github.jpthiery.ed210.business.FailedDecideResultExpected.Companion.failedWithoutCheckedReason
 import com.github.jpthiery.ed210.business.NoopDecideResultExpected.Companion.commandNoop
 import com.github.jpthiery.ed210.business.SuccessDecideResultExpected.Companion.commandSucceeded
+import org.apache.maven.model.Scm
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 
@@ -77,7 +78,7 @@ internal class ChangeRequestTest {
                             SubmitApplyResult(
                                     defaultChangeRequestId,
                                     "Successfully Applied",
-                            true
+                                    true
                             )
                     )
                     .then(failedWithoutCheckedReason()),
@@ -417,11 +418,114 @@ internal class ChangeRequestTest {
                     )
                     .then(defaultChangeRequestWIP),
             applyTestOnRequestChangeWith()
+                    .given(defaultChangeRequestApplyable)
+                    .whenApplyEvent(
+                            ChangeRequestCodeMerged(
+                                    defaultChangeRequestId
+                            )
+                    )
+                    .then(defaultChangeRequestApplyable),
+            applyTestOnRequestChangeWith()
                     .given(defaultChangeRequestMerging)
                     .whenApplyEvent(
                             ChangeRequestCodeMerged(defaultChangeRequestId)
                     )
-                    .then(ChangeRequestClosed(defaultChangeRequestId))
+                    .then(ChangeRequestClosed(defaultChangeRequestId)),
+            applyTestOnRequestChangeWith()
+                    .given(defaultChangeRequestApplying)
+                    .whenApplyEvent(
+                            ChangeRequestCreated(
+                                    defaultChangeRequestId,
+                                    fakeMrUrl,
+                                    defaultGitContext,
+                                    ScmSupported.GITLAB
+                            )
+                    )
+                    .then(defaultChangeRequestApplying),
+            applyTestOnRequestChangeWith()
+                    .given(defaultChangeRequestApplying)
+                    .whenApplyEvent(
+                            ChangeRequestCodePushed(
+                                    defaultChangeRequestId
+                            )
+                    )
+                    .then(defaultChangeRequestWIP),
+            applyTestOnRequestChangeWith()
+                    .given(defaultChangeRequestApplying)
+                    .whenApplyEvent(
+                            PlanRequested(
+                                    defaultChangeRequestId
+                            )
+                    )
+                    .then(defaultChangeRequestApplying),
+            applyTestOnRequestChangeWith()
+                    .given(defaultChangeRequestApplying)
+                    .whenApplyEvent(
+                            ChangeRequestCodePlanned(
+                                    defaultChangeRequestId,
+                                    "Successfully planned.",
+                                    true
+                            )
+                    )
+                    .then(defaultChangeRequestApplying),
+            applyTestOnRequestChangeWith()
+                    .given(defaultChangeRequestApplying)
+                    .whenApplyEvent(
+                            ChangeRequestCodePlanned(
+                                    defaultChangeRequestId,
+                                    "Failed to plan.",
+                                    false
+                            )
+                    )
+                    .then(defaultChangeRequestWIP),
+            applyTestOnRequestChangeWith()
+                    .given(defaultChangeRequestApplying)
+                    .whenApplyEvent(
+                            ApplyRequested(
+                                    defaultChangeRequestId
+                            )
+                    )
+                    .then(defaultChangeRequestApplying),
+            applyTestOnRequestChangeWith()
+                    .given(defaultChangeRequestApplying)
+                    .whenApplyEvent(
+                            ChangeRequestCodeApplied(
+                                    defaultChangeRequestId,
+                                    "Succesfully Applied",
+                                    true
+                            )
+                    )
+                    .then(defaultChangeRequestMerging.copy(outputApply = "Succesfully Applied")),
+            applyTestOnRequestChangeWith()
+                    .given(defaultChangeRequestApplying)
+                    .whenApplyEvent(
+                            ChangeRequestCodeApplied(
+                                    defaultChangeRequestId,
+                                    "Failed to Apply",
+                                    false
+                            )
+                    )
+                    .then(defaultChangeRequestWIP),
+            applyTestOnRequestChangeWith()
+                    .given(defaultChangeRequestApplying)
+                    .whenApplyEvent(
+                            ChangeRequestCodeMerged(
+                                    defaultChangeRequestId
+                            )
+                    )
+                    .then(defaultChangeRequestApplying),
+            applyTestOnRequestChangeWith()
+                    .given(defaulChangeRequestClosed)
+                    .whenApplyEvent(
+                            ChangeRequestCodeMerged(defaultChangeRequestId)
+                    )
+                    .then(defaulChangeRequestClosed),
+            applyTestOnRequestChangeWith()
+                    .given(defaulChangeRequestClosed)
+                    .whenApplyEvent(
+                            ChangeRequestCodePushed(defaultChangeRequestId)
+                    )
+                    .then(defaulChangeRequestClosed)
 
     ).map {
         DynamicTest.dynamicTest(

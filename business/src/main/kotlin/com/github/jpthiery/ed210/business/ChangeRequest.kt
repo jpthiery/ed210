@@ -189,13 +189,23 @@ class ChangeRequest : Aggregate<ChangeRequestCommand, ChangeRequestState, Change
                     )
                 }
                 is ApplyRequested -> state
-                is ChangeRequestCodeApplied -> ChangeRequestMerging(
-                        state.id,
-                        state.changeRequestUrl,
-                        state.sourceScmType,
-                        state.scmRequests,
-                        event.outputApplied
-                )
+                is ChangeRequestCodeApplied -> if (event.success) {
+                    ChangeRequestMerging(
+                            state.id,
+                            state.changeRequestUrl,
+                            state.sourceScmType,
+                            state.scmRequests,
+                            event.outputApplied
+                    )
+                } else {
+                    ChangeRequestInProgress(
+                            state.id,
+                            state.changeRequestUrl,
+                            state.gitChangeContext,
+                            state.sourceScmType,
+                            state.scmRequests
+                    )
+                }
                 is ChangeRequestCodeMerged -> state
             }
 
